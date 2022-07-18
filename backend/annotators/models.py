@@ -13,14 +13,13 @@ class AnnotationProject(models.Model):
     )
     annotator = models.ManyToManyField(
       settings.AUTH_USER_MODEL,
-      on_delete=models.CASCADE,
       related_name='annotator'
     )
 
 class Image(models.Model):
     image = models.ImageField(upload_to='images')
     upload_date = models.DateTimeField('date uploaded', auto_now_add=True)
-    project = models.ForeignKey(AnnotationProject)
+    project = models.ForeignKey(AnnotationProject, on_delete=models.CASCADE)
 
 class ImageAnnotation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
