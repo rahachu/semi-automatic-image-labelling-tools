@@ -1,3 +1,5 @@
+import os
+import cv2
 from django.shortcuts import render
 
 # Create your views here.
@@ -9,6 +11,12 @@ from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.decorators import action
+
+from backend.settings import BASE_DIR, MODEL_DIR
+import tensorflow
+
+from mrcnn import config, model, visualize
 
 from .permissions import IsOwner
 from .models import AnnotationProject, Image, ImageAnnotation
@@ -45,7 +53,7 @@ class ProjectView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        projectList = AnnotationProject.objects.filter(owner=request.user).order_by('update')
+        projectList = AnnotationProject.objects.filter(owner=request.user)
         serializer = AnnotationProjectSerializer(projectList, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -164,3 +172,48 @@ class ImageAnnotationView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class InferenceEngineView(viewsets.ViewSet):
+    class SimpleConfig(config.Config):
+        # Give the configuration a recognizable name
+        NAME = "coco_inference"
+        CLASS_NAMES = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+        
+        # set the number of GPUs to use along with the number of images per GPU
+        GPU_COUNT = 1
+        IMAGES_PER_GPU = 1
+
+        # Number of classes = number of classes + 1 (+1 for the background). The background class is named BG
+        NUM_CLASSES = len(CLASS_NAMES)
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.model = model.MaskRCNN(
+            mode='inference',
+            config=self.SimpleConfig(),
+            model_dir=MODEL_DIR
+        )
+
+    @action(methods=['get'], detail=False, url_path='get-version', url_name='get_version')
+    def get_version(self, request):
+        return Response({
+            'Tensorflow': tensorflow.__version__,
+            'Keras': tensorflow.keras.__version__,
+        })
+
+    @action(methods=['get'], detail=False, url_path='image', url_name='get_image')
+    def get_image(self, request):
+        # print(os.path.join(BASE_DIR, 'ml-model/mask_rcnn_coco.h5'))
+        # return Response('test')
+        self.model.load_weights(
+            filepath=os.path.join(BASE_DIR, 'ml-model/mask_rcnn_coco.h5'),
+            by_name=True)
+
+        dbImage = Image.objects.first()
+
+        image = cv2.imread(dbImage.image.path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        r = self.model.detect([image])
+
+        return Response(r[0]['masks'])
