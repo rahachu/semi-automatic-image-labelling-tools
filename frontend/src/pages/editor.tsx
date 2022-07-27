@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import dynamic from "next/dynamic";
 
 const EditorPageComponent = dynamic(
-    () => import("@/pages/EditorPage"),
+    () => import("@/components/pages/EditorPage"),
     {
         ssr: false
     }

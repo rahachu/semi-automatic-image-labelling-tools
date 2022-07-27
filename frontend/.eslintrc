@@ -1,0 +1,279 @@
+{
+  "extends": ["next", "next/core-web-vitals"],
+  "env": {
+    "browser": true,
+    "es6": true,
+    "jest": true
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "import",
+    "jest",
+    "react-hooks",
+    "import-alias",
+    "json-format"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      },
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  },
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "@typescript-eslint/explicit-function-return-type": "off",
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+      }
+    },
+    {
+      "files": ["*.tsx"],
+      "rules": {
+        "complexity": "off",
+        "react/no-array-index-key": "off",
+        "react/jsx-filename-extension": "off"
+      }
+    },
+    {
+      "files": ["*.test.tsx", "*.test.ts"],
+      "rules": {
+        "complexity": "off",
+        "global-require": "off",
+        "max-lines-per-function": "off"
+      }
+    },
+    {
+      "files": ["*.stories.tsx", "*.stories.ts", "generateProptypes.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": [
+        "*utils.ts",
+        "*utils.tsx",
+        "*config.ts",
+        "*config.tsx",
+        "*styles.ts",
+        "*styles.tsx",
+        "*propTypes.ts",
+        "*constants.ts",
+        "*enum.ts",
+        "*types.ts",
+        "*hook.ts",
+        "src/services/api/**/*",
+        "src/utils/**/*",
+        "src/repositories/**/*",
+        "src/services/eventTracker/**/*"
+      ]
+    }
+  ],
+  "globals": {
+    // Set each global variable name equal to true to allow the variable to be overwritten
+    // or false to disallow overwriting.
+    "describe": true,
+    "expect": true,
+    "test": true,
+    "beforeEach": true,
+    "afterEach": true,
+    "it": false,
+    "jest": true,
+    "__DEV__": false,
+    "Exception": true,
+    "ENV_FILE": false,
+    "GLOBAL": true
+  },
+  "rules": {
+    "@typescript-eslint/consistent-type-imports": "warn",
+    "@typescript-eslint/comma-dangle": ["error", "never"],
+    "@typescript-eslint/no-shadow": ["error"],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/quotes": [
+      "error",
+      "single",
+      {
+        "allowTemplateLiterals": true
+      }
+    ],
+    "@typescript-eslint/semi": ["error", "always"],
+    "camelcase": 0,
+    "complexity": "warn",
+    "function-paren-newline": 0,
+    "import-alias/import-alias": [
+      "error",
+      {
+        "relativeDepth": 0
+      }
+    ],
+    "import/named": "warn",
+    "import/no-cycle": [
+      "warn",
+      {
+        "maxDepth": 5
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true
+      }
+    ],
+    "import/no-named-as-default": "warn",
+    "import/order": [
+      "error",
+      {
+        "alphabetize": {
+          "caseInsensitive": true,
+          "order": "asc"
+        },
+        "groups": ["builtin", "external", "internal"],
+        "newlines-between": "always",
+        "pathGroups": [
+          {
+            "group": "external",
+            "pattern": "react",
+            "position": "before"
+          },
+          {
+            "pattern": "@/**",
+            "group": "external",
+            "position": "after"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react"]
+      }
+    ],
+    "indent": [
+      "error",
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "indent-legacy": "off",
+    "jsx-a11y/mouse-events-have-key-events": 0,
+    "key-spacing": [
+      "error",
+      {
+        "afterColon": true,
+        "beforeColon": false
+      }
+    ],
+    "max-depth": ["warn", 3],
+    "max-len": ["error", 150],
+    "max-lines-per-function": [
+      "warn",
+      {
+        "max": 300,
+        "skipBlankLines": true,
+        "skipComments": true
+      }
+    ],
+    "max-params": ["error", 4],
+    "no-console": ["error"],
+    "no-else-return": 0,
+    "no-multi-spaces": [
+      "error",
+      {
+        "ignoreEOLComments": true
+      }
+    ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
+    "no-plusplus": [
+      "error",
+      {
+        "allowForLoopAfterthoughts": true
+      }
+    ],
+    "no-restricted-globals": 0,
+    "no-restricted-properties": [
+      "error",
+      {
+        "message": "arguments.callee is deprecated",
+        "object": "arguments",
+        "property": "callee"
+      },
+      {
+        "message": "Please use Object.defineProperty instead.",
+        "property": "__defineGetter__"
+      },
+      {
+        "message": "Please use Object.defineProperty instead.",
+        "property": "__defineSetter__"
+      }
+    ],
+    "no-trailing-spaces": 0,
+    "no-underscore-dangle": 0,
+    "no-unused-vars": "off",
+    "no-var": "off",
+    "object-curly-newline": 0,
+    "object-curly-spacing": [
+      "warn",
+      "always",
+      {
+        "objectsInObjects": true,
+        "arraysInObjects": true
+      }
+    ],
+    "padded-blocks": 0,
+    "prefer-destructuring": 0,
+    "prefer-numeric-literals": "off",
+    "prefer-promise-reject-errors": 0,
+    "quote-props": ["error", "as-needed"],
+    "react-hooks/exhaustive-deps": "error",
+    "react-hooks/rules-of-hooks": "error",
+    "react/display-name": "off",
+    "react/jsx-closing-tag-location": 0,
+    "react/jsx-curly-brace-presence": 0,
+    "react/jsx-filename-extension": 0,
+    "react/jsx-indent": [
+      2,
+      2,
+      {
+        "indentLogicalExpressions": true
+      }
+    ],
+    "react/jsx-max-props-per-line": [
+      2,
+      {
+        "maximum": 2,
+        "when": "multiline"
+      }
+    ],
+    "react/jsx-no-bind": [
+      "error",
+      {
+        "ignoreDOMComponents": true
+      }
+    ],
+    "react/jsx-wrap-multilines": 0,
+    "react/no-string-refs": 0,
+    "react/no-this-in-sfc": "warn",
+    "react/no-typos": 0,
+    "react/no-unused-state": 0,
+    // hooks
+    "react/require-default-props": 0,
+    "react/sort-comp": 0
+  }
+}

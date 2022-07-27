@@ -1,4 +1,5 @@
 import os
+from unicodedata import name
 import cv2
 from django.shortcuts import render
 
@@ -10,21 +11,25 @@ from django.db.models import Q
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes, authentication_classes
+from rest_framework.pagination import LimitOffsetPagination
 
 from backend.settings import BASE_DIR, MODEL_DIR
 import tensorflow
 
 from mrcnn import config, model, visualize
 
-from .permissions import IsOwner
-from .models import AnnotationProject, Image, ImageAnnotation
+from .permissions import IsAnnotator, IsOwner
+from .models import AnnotationProject, Image
 from .serializers import (
     AnnotationProjectSerializer,
     GroupSerializer,
-    ImageAnnotationSerializer,
     ImageSerializer,
+    MyProjectSerializer,
+    ProjectImageSerializer,
     UserSerializer
 )
 
@@ -49,12 +54,18 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class ProjectView(APIView):
+class ProjectView(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         projectList = AnnotationProject.objects.filter(owner=request.user)
-        serializer = AnnotationProjectSerializer(projectList, many=True, context={'request': request})
+        serializer = MyProjectSerializer(projectList, many=True)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False, url_path='annotate', name='get_annotate_project')
+    def get_annotate(self, request, *args, **kwargs):
+        projectList = AnnotationProject.objects.filter(annotators=request.user)
+        serializer = MyProjectSerializer(projectList, many=True)
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
@@ -69,8 +80,27 @@ class ProjectView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication, BasicAuthentication])
+@permission_classes([permissions.IsAuthenticated, IsOwner, IsAnnotator])
+def project_image(request, pk):
+    try:
+        project = AnnotationProject.objects.get(pk=pk)
+    except AnnotationProject.DoesNotExist:
+        raise Http404
+    annotated = False
+    qAnnotated = request.GET.get('annotated')
+    if qAnnotated:
+        annotated = qAnnotated.lower() == 'true'
+    imageList = Image.objects.filter(project=project, annotate_by__isnull=not annotated)
+    paginator = LimitOffsetPagination()
+    paginator.paginate_queryset(imageList, request)
+    serializer = ProjectImageSerializer(imageList, context={'request': request}, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
 class ProjectDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsOwner]
+    authentication_classes = [JWTAuthentication, BasicAuthentication]
 
     def get_object(self, pk):
         try:
@@ -119,11 +149,16 @@ class ImageView(APIView):
             data=request.data,
             context={'request': request}
         )
-        serializer.save()
-        return Response(serializer.data)
+        if serializer.is_valid():
+            serializer.save(
+                project=AnnotationProject.objects.get(pk=request.data['project'])
+            )
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ImageDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication, BasicAuthentication]
 
     def get_object(self, pk):
         try:
@@ -133,45 +168,58 @@ class ImageDetailView(APIView):
 
     def get(self, request, pk, format=None):
         image = self.get_object(pk)
-        serializer = ImageSerializer(image)
+        serializer = ImageSerializer(image, context={'request': request})
         return Response(serializer.data)
 
-class ImageAnnotationView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self, pk, user):
-        try:
-            return ImageAnnotation.objects.get(Q(image=pk) & Q(updated_by=user))
-        except ImageAnnotation.DoesNotExist:
-            try:
-                image = Image.objects.get(pk=pk)
-                imageAnnotation = ImageAnnotation.objects.create(image=image, updated_by=user)
-                return imageAnnotation
-            except Image.DoesNotExist:
-                raise Http404
-
-    def get(self, request, pk, format=None):
-        '''
-        This function is to give annotation to an image
-        '''
-        imageAnnotation = self.get_object(pk, request.user)
-        print(imageAnnotation)
-        serializer = ImageAnnotationSerializer(imageAnnotation)
-        return Response(serializer.data)
-
-    def post(self, request, pk, format=None):
-        '''
-        This function is to give annotation to an image
-        '''
-        imageAnnotation = self.get_object(pk, request.user)
-        serializer = ImageAnnotationSerializer(
-            imageAnnotation,
-            data=request.data
+    def patch(self, request, pk, format=None):
+        image = self.get_object(pk)
+        serializer = ImageSerializer(
+            image,
+            data=request.data,
+            context={'request': request},
+            partial=True
         )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# class ImageAnnotationView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get_object(self, pk, user):
+#         try:
+#             return ImageAnnotation.objects.get(Q(image=pk) & Q(updated_by=user))
+#         except ImageAnnotation.DoesNotExist:
+#             try:
+#                 image = Image.objects.get(pk=pk)
+#                 imageAnnotation = ImageAnnotation.objects.create(image=image, updated_by=user)
+#                 return imageAnnotation
+#             except Image.DoesNotExist:
+#                 raise Http404
+
+#     def get(self, request, pk, format=None):
+#         '''
+#         This function is to give annotation to an image
+#         '''
+#         imageAnnotation = self.get_object(pk, request.user)
+#         print(imageAnnotation)
+#         serializer = ImageAnnotationSerializer(imageAnnotation)
+#         return Response(serializer.data)
+
+#     def post(self, request, pk, format=None):
+#         '''
+#         This function is to give annotation to an image
+#         '''
+#         imageAnnotation = self.get_object(pk, request.user)
+#         serializer = ImageAnnotationSerializer(
+#             imageAnnotation,
+#             data=request.data
+#         )
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class InferenceEngineView(viewsets.ViewSet):
     class SimpleConfig(config.Config):
@@ -188,9 +236,10 @@ class InferenceEngineView(viewsets.ViewSet):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.config = self.SimpleConfig()
         self.model = model.MaskRCNN(
             mode='inference',
-            config=self.SimpleConfig(),
+            config=self.config,
             model_dir=MODEL_DIR
         )
 
@@ -203,8 +252,6 @@ class InferenceEngineView(viewsets.ViewSet):
 
     @action(methods=['get'], detail=False, url_path='image', url_name='get_image')
     def get_image(self, request):
-        # print(os.path.join(BASE_DIR, 'ml-model/mask_rcnn_coco.h5'))
-        # return Response('test')
         self.model.load_weights(
             filepath=os.path.join(BASE_DIR, 'ml-model/mask_rcnn_coco.h5'),
             by_name=True)
@@ -214,6 +261,29 @@ class InferenceEngineView(viewsets.ViewSet):
         image = cv2.imread(dbImage.image.path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        r = self.model.detect([image])
+        r = self.model.detect([image])[0]
 
-        return Response(r[0]['masks'])
+        res = {
+            "src": dbImage.image.url,
+            "name" : dbImage.project.title,
+            "regions": []
+        }
+
+        classResult = r['class_ids']
+        boundingBox = r['rois']
+        height, width = image.shape[:2]
+        masks = r['masks']
+
+        for i in range(len(classResult)):
+            y1, x1, y2, x2 = boundingBox[i]
+            res['regions'].append({
+                'type': 'box',
+                'id': 'box'+ str(i),
+                'cls': self.config.CLASS_NAMES[classResult[i]],
+                'x': x1 / width,
+                'y': y1 / height,
+                'h': (y2 - y1) / height,
+                'w': (x2 - x1) / width
+            })
+
+        return Response(res)

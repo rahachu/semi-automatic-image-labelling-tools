@@ -1,0 +1,10 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true,
+        "source.fixAll.tslint": true
+    },
+    "prettier.enable": false,
+    "eslint.alwaysShowStatus": true,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "tsInterfaceSorter.emptyLineBetweenProperties": false
+}
