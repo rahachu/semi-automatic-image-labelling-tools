@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const PageWrapper = styled.div`
-    padding: 7em 0;
+    padding: 1em 0;
     text-align: center;
 `
 
@@ -82,5 +82,14 @@ export const LoginButton = styled.button`
     margin: 20px 0;
     :hover {
         opacity: 0.8;
+    }
+`
+
+export const StyledAnchor = styled.a`
+    margin-left: 4px;
+    cursor: pointer;
+    color: #f75959;
+    :hover{
+        text-decoration: underline;
     }
 `

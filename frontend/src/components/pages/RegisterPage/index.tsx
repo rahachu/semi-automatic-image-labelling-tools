@@ -3,29 +3,37 @@ import axios from "axios";
 import { useRouter } from "next/dist/client/router";
 import Link from "next/link";
 import { FormEventHandler, useState } from "react";
-import { StyledAnchor } from "../RegisterPage/styles";
-import { ContentWrapper, DescWrapper, FormError, FormInput, FormLabel, FormWrapper, LoginButton, LoginWrapper, PageTitle, PageWrapper } from "./styles";
+import { ContentWrapper, DescWrapper, FormError, FormInput, FormLabel, FormWrapper, LoginButton, LoginWrapper, PageTitle, PageWrapper, StyledAnchor } from "./styles";
 
-const LoginPage = () => {
+const RegisterPage = () => {
     const router = useRouter()
     const [errorMessages, setErrorMessages] = useState({
         detail: '',
         username: '',
-        password: ''
+        email: '',
+        password: '',
+        passwordverif: ''
     })
 
     const handleSubmit: FormEventHandler = async (event) => {
         event.preventDefault()
         const target = event.currentTarget as EventTarget & Element & {
             username: HTMLInputElement,
-            password: HTMLInputElement
+            email: HTMLInputElement,
+            password: HTMLInputElement,
+            passwordverif: HTMLInputElement
+        }
+        if (target.password.value != target.passwordverif.value) {
+            setErrorMessages(prevState => ({...prevState, passwordverif: "password verification different!"}))
+            return
         }
         const body = {
             username: target.username.value,
+            email: target.email.value,
             password: target.password.value
         }
 
-        await fetch('/api/login', {
+        await fetch('/api/register', {
             body: JSON.stringify(body),
             method: 'POST'
         })
@@ -41,6 +49,12 @@ const LoginPage = () => {
                     setErrorMessages(prevState => ({...prevState, username: result.username.join(', ')}))
                 } else {
                     setErrorMessages(prevState => ({...prevState, username: ''}))
+                }
+
+                if (result.email) {
+                    setErrorMessages(prevState => ({...prevState, email: result.email.join(', ')}))
+                } else {
+                    setErrorMessages(prevState => ({...prevState, email: ''}))
                 }
 
                 if (result.password) {
@@ -66,7 +80,7 @@ const LoginPage = () => {
             </PageTitle>
             <ContentWrapper>
                 <LoginWrapper>
-                    <PageTitle>Masuk Sekarang</PageTitle>
+                    <PageTitle>Daftar Sekarang</PageTitle>
                     <form onSubmit={handleSubmit}>
                         {errorMessages.detail && <FormError>{errorMessages.detail}</FormError>}
                         <FormWrapper>
@@ -75,16 +89,26 @@ const LoginPage = () => {
                             <FormInput type="text" placeholder="Username" name="username"/>
                         </FormWrapper>
                         <FormWrapper>
+                            <FormLabel>Email</FormLabel>
+                            {errorMessages.email && <FormError>{errorMessages.email}</FormError>}
+                            <FormInput type="email" placeholder="email" name="email"/>
+                        </FormWrapper>
+                        <FormWrapper>
                             <FormLabel>Password</FormLabel>
                             {errorMessages.password && <FormError>{errorMessages.password}</FormError>}
                             <FormInput type="password" placeholder="Password" name="password"/>
                         </FormWrapper>
-                        <span>Belum punya akun?</span>
-                        <Link href={'/register'} passHref>
-                            <StyledAnchor>Daftar</StyledAnchor>
+                        <FormWrapper>
+                            <FormLabel>Password Verification</FormLabel>
+                            {errorMessages.passwordverif && <FormError>{errorMessages.passwordverif}</FormError>}
+                            <FormInput type="password" placeholder="Password Verification" name="passwordverif"/>
+                        </FormWrapper>
+                        <span>Sudah punya akun?</span>
+                        <Link href={'/login'} passHref>
+                            <StyledAnchor>Masuk</StyledAnchor>
                         </Link>
                         <LoginButton type="submit">
-                            Masuk
+                            Daftar
                         </LoginButton>
                     </form>
                 </LoginWrapper>
@@ -100,4 +124,4 @@ const LoginPage = () => {
     )
 }
 
-export default LoginPage;
+export default RegisterPage;

@@ -24,7 +24,7 @@ export const ImageCard = styled.div`
     border-radius: 8px;
 `
 
-export const ImageFile = styled(Image)`
+export const ImageFile = styled(Image)<any>`
     object-fit: cover;
 `
 
@@ -40,7 +40,20 @@ export const Button = styled.button`
     width: 100%;
     opacity: 1;
     margin: 8px 0;
+    :disabled{
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
     :hover {
         opacity: 0.8;
     }
+`
+
+export const ClassChip = styled.div`
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 32px;
+    font-size: 13px;
+    border: 1px solid darkgray;
+    margin: 4px;
 `

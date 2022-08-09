@@ -24,7 +24,7 @@ const EditorPage = ({ imageDetail }: EditorPageProps) => {
     const classList = imageDetail.project.class_list.slice(1)
 
     const mappedRegions = useMemo(() => {
-		switch (imageDetail.project.annotation_type) {
+		switch (imageDetail.project.annotation_type as string) {
 			case 'Polygon':
 				if (!imageDetail.polygons) {
 					return []
@@ -57,10 +57,16 @@ const EditorPage = ({ imageDetail }: EditorPageProps) => {
         polygons?: any,
         boxes?: any
       } = {}
-      if (imageDetail.project.annotation_type == 'Polygon') {
+	  for (const region of regionsData) {
+		if (imageDetail.project.class_list.indexOf(region.cls) < 0) {
+			alert('Terdapat kelas objek yang tidak terdaftar')
+			return
+		}
+	  }
+      if (imageDetail.project.annotation_type as string == 'Polygon') {
         patchData.polygons = regionsData
       }
-      if (imageDetail.project.annotation_type == 'Bounding Box') {
+      if (imageDetail.project.annotation_type as string == 'Bounding Box') {
         patchData.boxes = regionsData
       }
       axiosInstance.patch(`/backend/api/image/${imageDetail.id}/`, patchData)
@@ -80,6 +86,8 @@ const EditorPage = ({ imageDetail }: EditorPageProps) => {
 		}
 	  })
     }
+
+	console.log(mappedRegions)
 
     return (
         <EditorWrapper>

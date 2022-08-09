@@ -56,6 +56,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 class ProjectView(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication, BasicAuthentication]
 
     def list(self, request, *args, **kwargs):
         projectList = AnnotationProject.objects.filter(owner=request.user)
@@ -97,6 +98,24 @@ def project_image(request, pk):
     paginator.paginate_queryset(imageList, request)
     serializer = ProjectImageSerializer(imageList, context={'request': request}, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+@api_view(['GET'])
+# @authentication_classes([JWTAuthentication, BasicAuthentication])
+# @permission_classes([permissions.IsAuthenticated, IsOwner, IsAnnotator])
+def export_project(request, pk):
+    try:
+        project = AnnotationProject.objects.get(pk=pk)
+    except AnnotationProject.DoesNotExist:
+        raise Http404
+    q_export_format = request.GET.get('toformat')
+    if q_export_format == 'yolo':
+        stream_file = project.export_to_yolo()
+    else:
+        q_export_format = 'coco'
+        stream_file = project.export_to_coco()
+    response = HttpResponse(stream_file, content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="{project.title}-{q_export_format}.zip"'
+    return response
 
 class ProjectDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsOwner]

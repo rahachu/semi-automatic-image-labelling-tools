@@ -15,10 +15,10 @@ export type ProjectDetail = {
     description: string,
     class_list: string[],
     class_num: number,
-    annotation_type: 'Polygon' | 'Point' | 'Bounding Box',
-    owner: User,
+    annotation_type: 'PL' | 'PT' | 'BB',
+    owner?: User,
     annotators: User[],
-    is_video: boolean,
+    is_video?: boolean,
     auto_annotate: boolean,
-    file_weight: string
+    file_weight?: string
 }

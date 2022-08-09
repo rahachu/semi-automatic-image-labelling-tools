@@ -6,5 +6,6 @@ export type ProjectsPageProps = {
     actionButtonProps?: {
         text: string,
         onClick: (id: number) => (() => void)
-    }
+    },
+    isOwner?: boolean
 }

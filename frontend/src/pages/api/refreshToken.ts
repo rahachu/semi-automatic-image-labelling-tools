@@ -6,7 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 const refreshTokenRoute = async (req: NextApiRequest, res: NextApiResponse) => {
   const { session } = req
   try {
-    const {data, headers: returnedHeaders} = await axios.post(
+    const {data, status} = await axios.post(
       `${process.env.API_URL}/api/auth/refresh`, // refresh token Node.js server path
       {
         refresh: session.refresh
@@ -21,6 +21,10 @@ const refreshTokenRoute = async (req: NextApiRequest, res: NextApiResponse) => {
         },
       },
     )
+
+    if (data.status != 200) {
+      session.destroy()
+    }
 
     res.status(200).send(data)
   } catch (error) {

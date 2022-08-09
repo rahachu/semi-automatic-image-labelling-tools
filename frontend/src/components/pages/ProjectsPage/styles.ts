@@ -74,3 +74,17 @@ export const BodyCell = styled.td`
         border-right: #FDF7FA solid 1px;
     }
 `;
+
+export const CreateButton = styled.button`
+    background-color: #2196F3;
+    color: white;
+    padding: 8px 16px;
+    border: 1px solid darkgrey;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 1;
+
+    :hover {
+        opacity: 0.8;
+    }
+`

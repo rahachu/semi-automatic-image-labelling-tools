@@ -18,9 +18,9 @@ router.register(r'project', views.ProjectView, basename='project')
 urlpatterns = [
     path('', views.index, name='index'),
     path('auth', current_user, name='auth'),
-    # re_path(r'^project/<int:pk>/images$', views.project_image),
     path('project/<int:pk>/images', views.project_image),
-    path('project/<int:pk>/', views.ProjectDetailView.as_view()),
+    path('project/<int:pk>/export', views.export_project),
+    path('project/<int:pk>', views.ProjectDetailView.as_view()),
     path('image', views.ImageView.as_view()),
     path('image/<int:pk>', views.ImageDetailView.as_view()),
     # path('image/<int:pk>/annotate', views.ImageAnnotationView.as_view())

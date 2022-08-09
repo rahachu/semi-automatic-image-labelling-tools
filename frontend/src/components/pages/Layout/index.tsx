@@ -37,12 +37,12 @@ const Layout = ({ children, user }: LayoutProps) => {
                             Proyek Anotasi
                         </SidebarAnchor>
                     </Link>
-                    <SidebarAnchor href="/">
+                    {/* <SidebarAnchor href="/">
                         Buku Tugas Akhir
                     </SidebarAnchor>
                     <SidebarAnchor href="/">
                         Tentang Saya
-                    </SidebarAnchor>
+                    </SidebarAnchor> */}
                     <SidebarAnchor href="#" onClick={logoutHandler}>
                         Keluar
                     </SidebarAnchor>
@@ -52,7 +52,7 @@ const Layout = ({ children, user }: LayoutProps) => {
                         Selamat datang, {user.username} <br />
                         <a href={`mailto:${user.email}`}>{user.email}</a>
                     </Header>
-                    <main style={{ height: '85vh', overflow: 'auto'}}>
+                    <main style={{ height: '84vh', overflow: 'auto'}}>
                         { children }
                     </main>
                     <footer style={{ padding: 8 }}>
@@ -61,10 +61,10 @@ const Layout = ({ children, user }: LayoutProps) => {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                        Powered by{' '}
-                        <span>
-                            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-                        </span>
+                            Powered by{' '}
+                            <span>
+                                <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
+                            </span>
                         </a>
                     </footer>
                 </PageContainer>

@@ -1,16 +1,31 @@
-import { BodyCell, BodyRow, HeadCell, StyledTable, TableContainer } from "./styles"
+import router from "next/router"
+import { BodyCell, BodyRow, CreateButton, HeadCell, StyledTable, TableContainer } from "./styles"
 import { ProjectsPageProps } from "./types"
 
-const ProjectsPage = ({title = 'Proyek Anotasi Saya', projects, actionButtonProps}: ProjectsPageProps) => {
+const ProjectsPage = ({title = 'Proyek Anotasi Saya', projects, actionButtonProps, isOwner}: ProjectsPageProps) => {
     if (projects.length == 0) {
         return <div style={{ padding: 16 }}>
-            <h2>{title}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2>{title}</h2>
+                {isOwner && <CreateButton
+                    onClick={() => {
+                        router.push('/create')
+                    }}
+                >Buat Proyek</CreateButton>}
+            </div>
             <p>Anda belum memiliki proyek anotasi sendiri</p>
         </div>
     }
     return (
         <div style={{ padding: 16 }}>
-            <h2>{title}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2>{title}</h2>
+                {isOwner && <CreateButton
+                    onClick={() => {
+                        router.push('/create')
+                    }}
+                >Buat Proyek</CreateButton>}
+            </div>
             <TableContainer>
             <StyledTable>
                 <thead>

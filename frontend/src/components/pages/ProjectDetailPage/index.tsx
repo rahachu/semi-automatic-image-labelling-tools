@@ -2,7 +2,7 @@ import axiosInstance from "@/lib/axios"
 import { Image } from "@/types/Image"
 import { useRouter } from "next/router"
 import { ChangeEventHandler, useEffect, useState } from "react"
-import { Button, DetailContainer, DetailName, DetailValue, ImageCard, ImageFile, ImagesContainer } from "./styles"
+import { Button, ClassChip, DetailContainer, DetailName, DetailValue, ImageCard, ImageFile, ImagesContainer } from "./styles"
 import { ProjectDetailPageProps } from "./types"
 
 const ProjectDetailPage = ({
@@ -12,6 +12,12 @@ const ProjectDetailPage = ({
     const [images, setImages] = useState<Image[]>([])
     const [loading, setLoading] = useState(true)
     const [annotated, setAnnotated] = useState('false')
+
+    const annotationType = {
+        PL: "Polygon",
+        BB: "Bounding Box",
+        PT: "Point"
+    }
 
     const onChangeSelect: ChangeEventHandler<HTMLSelectElement> = (e) => {
         setAnnotated(e.currentTarget.value)
@@ -43,8 +49,8 @@ const ProjectDetailPage = ({
                 Pemilik Proyek:
             </DetailName>
             <DetailValue>
-                {project.owner.username} <br />
-                <a href={`mailto:${project.owner.email}`}>{project.owner.email}</a>
+                {project.owner?.username} <br />
+                <a href={`mailto:${project.owner?.email}`}>{project.owner?.email}</a>
             </DetailValue>
         </DetailContainer>
         <DetailContainer>
@@ -52,7 +58,7 @@ const ProjectDetailPage = ({
                 Jenis Label:
             </DetailName>
             <DetailValue>
-                {project.annotation_type}
+                {annotationType[project.annotation_type]}
             </DetailValue>
         </DetailContainer>
         <DetailContainer>
@@ -67,12 +73,10 @@ const ProjectDetailPage = ({
             <DetailName>
                 Daftar Kelas:
             </DetailName>
-            <DetailValue>
-                <ul style={{margin: 0, paddingLeft: '1em'}}>
-                    {project.class_list.map((className, i) => (
-                        <li key={i}>{className}</li>
-                    ))}
-                </ul>
+            <DetailValue style={{maxWidth: '50vw'}}>
+                {project.class_list.map((className, i) => (
+                    <ClassChip key={i}>{className}</ClassChip>
+                ))}
             </DetailValue>
         </DetailContainer>
         <h2>Daftar Gambar</h2>

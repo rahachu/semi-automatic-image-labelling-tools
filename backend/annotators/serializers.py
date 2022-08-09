@@ -1,4 +1,3 @@
-from dataclasses import field
 from django.contrib.auth.models import User, Group
 from django.core.files.storage import default_storage
 from rest_framework import serializers
@@ -11,7 +10,7 @@ from .models import AnnotationProject, Image
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'username', 'email', 'groups']
+        fields = ['id', 'url', 'username', 'email', 'groups']
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
@@ -28,7 +27,7 @@ class MyProjectSerializer(serializers.ModelSerializer):
 class AnnotationProjectSerializer(serializers.ModelSerializer):
     owner = UserSerializer(many=False, read_only=True, required=False)
     annotators = UserSerializer(many=True, read_only=True, required=False)
-    annotation_type = serializers.CharField(source='get_annotation_type_display', required=False)
+    annotation_type = serializers.CharField(required=False)
     class_list = serializers.JSONField(required=False)
     class_num = serializers.JSONField(required=False)
 
@@ -45,6 +44,8 @@ class AnnotationProjectSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         annotators = self.initial_data.get('annotators', [])
         instance.annotators.set(annotators)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
         return instance
 
@@ -73,7 +74,7 @@ class ImageSerializer(serializers.ModelSerializer):
         instance.save()
         if instance.project.auto_annotate:
             inferenceEngine = MRCNNImageEngine(instance)
-            inferenceEngine.inferenceSegmentation()
+            inferenceEngine.inferenceImage()
         return instance
 
     def update(self, instance, validated_data):
@@ -83,14 +84,52 @@ class ImageSerializer(serializers.ModelSerializer):
             file = validated_data['file']
             file.name = filePath
             instance.file = file
+            if instance.project.auto_annotate:
+                inferenceEngine = MRCNNImageEngine(instance)
+                inferenceEngine.inferenceImage()
 
         if 'polygons' in validated_data.keys():
             instance.polygons = validated_data['polygons']
             instance.annotate_by = self.context['request'].user
+            bbox = []
+            for i, polygon in enumerate(instance.polygons):
+                x_coordinates, y_coordinates = zip(*polygon['points'])
+                x1 = min(x_coordinates)
+                x2 = max(x_coordinates)
+                y1 = min(y_coordinates)
+                y2 = max(y_coordinates)
+                bbox.append({
+                    'type': 'box',
+                    'id': 'box'+ str(i),
+                    'cls': polygon['cls'],
+                    'x': x1,
+                    'y': y1,
+                    'h': (y2 - y1),
+                    'w': (x2 - x1)
+                })
+            instance.boxes = bbox
 
         if 'boxes' in validated_data.keys():
-            instance.polygons = validated_data['boxes']
+            instance.boxes = validated_data['boxes']
             instance.annotate_by = self.context['request'].user
+        else:
+            bbox = []
+            for i, polygon in enumerate(instance.polygons):
+                x_coordinates, y_coordinates = zip(*polygon['points'])
+                x1 = min(x_coordinates)
+                x2 = max(x_coordinates)
+                y1 = min(y_coordinates)
+                y2 = max(y_coordinates)
+                bbox.append({
+                    'type': 'box',
+                    'id': 'box'+ str(i),
+                    'cls': polygon['cls'],
+                    'x': x1,
+                    'y': y1,
+                    'h': (y2 - y1),
+                    'w': (x2 - x1)
+                })
+            instance.boxes = bbox
 
         instance.save()
         return instance

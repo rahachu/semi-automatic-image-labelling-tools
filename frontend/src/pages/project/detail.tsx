@@ -25,7 +25,7 @@ export const getServerSideProps = gsspAuth<ProjectDetailPageProps>(async functio
     const { identifier } = query
     let projectDetail: ProjectDetail
     try {
-        const { data } = await axiosInstance.get(`/api/project/${identifier}/`, {
+        const { data } = await axiosInstance.get(`/api/project/${identifier}`, {
         headers: {
             Cookie: req.headers.cookie || ''
         }

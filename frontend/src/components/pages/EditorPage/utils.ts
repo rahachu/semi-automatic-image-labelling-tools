@@ -18,5 +18,9 @@ export const getClassColor = (cls?: string, cls_list?: string[]) => {
     if (!cls || !cls_list) {
         return colors[0]
     }
-    return colors[cls_list.indexOf(cls) % colors.length]
+    const indexClass = cls_list.indexOf(cls)
+    if (indexClass < 0){
+        return '#f8f9fd'
+    }
+    return colors[indexClass % colors.length]
 }
